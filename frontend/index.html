@@ -338,7 +338,7 @@
 
     async function recalculateMatch() {
       try {
-        const res = await fetch('http://localhost:8000/api/v3/match-jds', {
+        const res = await fetch('https://life-fit-backend.onrender.com/api/v3/match-jds', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_vector: currentVector })
@@ -485,7 +485,7 @@
       };
 
       try {
-        const res = await fetch('http://localhost:8000/api/v3/analyze-pipeline', {
+        const res = await fetch('https://life-fit-backend.onrender.com/api/v3/analyze-pipeline', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text: text })
