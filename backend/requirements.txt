@@ -1,0 +1,6 @@
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+# openai는 GEMINI_API_KEY 없이 OPENAI_API_KEY(유료)만 쓸 때만 필요.
+# Gemini 경로(무료, 카드 불필요)는 표준 라이브러리(urllib)만 사용하므로 추가 설치 불필요.
+openai>=1.0

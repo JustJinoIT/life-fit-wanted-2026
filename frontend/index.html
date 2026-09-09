@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Fit | 원티드 라이프로그 기반 커리어-라이프스타일 핏 분석</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%233366FF'/%3E%3Ctext x='12' y='17' font-size='14' text-anchor='middle' fill='white' font-family='sans-serif'%3EW%3C/text%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { font-family: 'Pretendard', sans-serif; }
+    .wanted-blue { color: #3366FF; }
+    .bg-wanted-blue { background-color: #3366FF; }
+    .bg-wanted-blue:hover { background-color: #254EDB; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-wanted-blue rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm">
+          W
+        </div>
+        <div>
+          <span class="font-extrabold text-xl tracking-tight text-slate-900">Life Fit</span>
+          <span class="text-xs bg-blue-50 text-blue-600 font-semibold px-2 py-0.5 rounded-full ml-1 border border-blue-200">Wanted AI 2026</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openBenchmarkModal()" class="text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-line text-blue-500"></i> 심사위원 평가·ROI 벤치마크
+        </button>
+        <span class="text-xs font-medium text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+          <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Zero-Retention Privacy
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Input & Evidence (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col gap-6">
+      
+      <!-- Input Card -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-pen-nib wanted-blue"></i> 1. 라이프로그 입력
+          </h2>
+          <span class="text-xs text-slate-400">일기 / 회고 / 메타데이터</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-3 leading-relaxed">
+          일상의 에너지 흐름, 협업 피로도, 몰입 순간을 적어주세요. 민감 개인정보(PII)는 Stage 1에서 마스킹되며 분석 즉시 폐기됩니다.
+        </p>
+
+        <!-- 제로 인풋 메타데이터 동기화 버튼 (시뮬레이션 데모) -->
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 mb-3">
+          <span class="text-[11px] font-bold text-slate-600 block mb-1.5">⚡ 제로 인풋 메타데이터 원클릭 동기화 (Phase 2 프로토타입 · 샘플 데이터 시뮬레이션)</span>
+          <div class="flex gap-2">
+            <button onclick="loadCalendarSync()" class="flex-1 text-xs bg-white border border-slate-200 hover:bg-blue-50 hover:border-blue-300 text-slate-700 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition shadow-xs">
+              <i class="fa-solid fa-calendar text-blue-500"></i> 구글 캘린더 연동 (샘플)
+            </button>
+            <button onclick="loadSlackSync()" class="flex-1 text-xs bg-white border border-slate-200 hover:bg-amber-50 hover:border-amber-300 text-slate-700 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 transition shadow-xs">
+              <i class="fa-brands fa-slack text-amber-500"></i> 슬랙 활동 동기화 (샘플)
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">※ 실제 Google/Slack API 연동이 아닌, 연동 시 나올 법한 샘플 데이터로 UX 흐름을 보여주는 프로토타입입니다.</p>
+        </div>
+        
+        <textarea id="logInput" rows="6" class="w-full text-sm p-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition resize-none bg-slate-50 focus:bg-white" placeholder="예시: 주로 혼자 조용히 코딩하고 아키텍처를 설계할 때 몰입도가 최고조에 달한다. 불필요한 미팅이 3개 이상 겹치는 날은 개발 생산성이 완전히 무너진다."></textarea>
+        
+        <!-- Preset Examples -->
+        <div class="mt-2.5 flex gap-2 overflow-x-auto pb-1">
+          <button onclick="setSample(1)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md whitespace-nowrap transition"># 몰입 개발자</button>
+          <button onclick="setSample(2)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md whitespace-nowrap transition"># 소통 과부하 PO</button>
+          <button onclick="setSample(3)" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md whitespace-nowrap transition"># 루틴 안정성 선호</button>
+        </div>
+
+        <button id="analyzeBtn" onclick="runAnalyze()" class="w-full mt-4 bg-wanted-blue text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Two-Stage AI 분석 실행
+        </button>
+      </div>
+
+      <!-- Stage 1 & 2 Results: Evidence & Signals -->
+      <div id="signalSection" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hidden flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-emerald-500"></i> Stage 1 & 2 분석 근거 (Evidence)
+          </h3>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] bg-emerald-50 text-emerald-700 font-medium px-2 py-0.5 rounded border border-emerald-200">PII 마스킹 적용</span>
+            <span id="engineBadge" class="text-[11px] font-medium px-2 py-0.5 rounded border bg-slate-100 text-slate-600 border-slate-200">엔진 정보 없음</span>
+          </div>
+        </div>
+
+        <!-- Evidence List -->
+        <div class="space-y-2" id="evidenceList"></div>
+
+        <div class="border-t border-slate-100 pt-3">
+          <h4 class="text-xs font-bold text-slate-700 mb-2.5 flex items-center justify-between">
+            <span>AI 추론 가설 (Signals)</span>
+            <span class="text-[10px] text-slate-400 font-normal">사용자 직접 수정 가능</span>
+          </h4>
+          <div class="space-y-2" id="signalList"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Multidimensional Match & JD Comparison (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+      
+      <!-- 6-Axis Radar & Vector Control Card -->
+      <div id="vectorCard" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie wanted-blue"></i> 2. 6차원 Life-Work 벡터 공간
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">일상 시그널로부터 도출된 내 라이프스타일 척도 (직접 미세조정 가능)</p>
+          </div>
+          <button onclick="recalculateMatch()" class="text-xs bg-slate-900 text-white font-medium px-3 py-1.5 rounded-lg hover:bg-slate-800 transition">
+            매칭 재계산
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+          <!-- Chart -->
+          <div class="md:col-span-6 flex justify-center">
+            <div class="w-full max-w-[260px] h-[260px]">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+          <!-- Sliders -->
+          <div class="md:col-span-6 space-y-2.5" id="sliderGroup">
+            <!-- Dynamic Sliders -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Match Results Section -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-briefcase wanted-blue"></i> 3. 원티드 채용공고 핏 & 3개월 근속 예측
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">내 에너지 리듬과 지속가능성이 가장 높은 최적의 JD</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">※ 아래 3개 기업은 실존 기업이 아닌 가상 예시 데이터입니다.</p>
+          </div>
+          <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">3개 공고 비교 (가상 예시)</span>
+        </div>
+
+        <!-- JD Comparison List -->
+        <div class="space-y-3.5" id="jdMatchList">
+          <div class="text-center py-12 text-slate-400 text-sm">
+            좌측에서 라이프로그를 입력하고 분석을 실행해주세요.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Benchmark & ROI Modal -->
+  <div id="benchmarkModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-award text-amber-500"></i> 심사위원 평가 벤치마크 & ROI 모델
+        </h3>
+        <button onclick="closeBenchmarkModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-5 text-sm text-slate-700">
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2">1. Two-Stage 파이프라인 상태 (해커톤 프로토타입 기준)</h4>
+          <p class="text-xs text-slate-500 mb-2">정확도/F1 등 정량 성능 지표는 별도 평가셋으로 아직 측정하지 않았습니다. 아래는 "이렇게 검증하겠다"는 계획이지, 측정 결과가 아닙니다.</p>
+          <div class="grid grid-cols-1 gap-2 text-xs">
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex justify-between">
+              <span class="text-slate-600">Stage 1 PII 마스킹</span>
+              <span class="font-semibold text-slate-800">정규식 기반 최소 구현 (전화번호/이메일/주민번호 형식)</span>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex justify-between">
+              <span class="text-slate-600">Stage 2 벡터 추출</span>
+              <span class="font-semibold text-slate-800" id="engineStatusLabel">GEMINI_API_KEY(무료) 우선 → 없으면 OPENAI_API_KEY(유료) → 둘 다 없으면 규칙 기반 폴백</span>
+            </div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 flex justify-between">
+              <span class="text-slate-600">평가 계획</span>
+              <span class="font-semibold text-slate-800">라벨링된 소규모 평가셋(N=50~) 구축 후 Precision/F1 측정 예정</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-900 mb-2">2. 원티드 비즈니스 임팩트 (가정 기반 예시 계산, 실측 아님)</h4>
+          <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-600">참고: 국내 채용 조기퇴사 관련 보도(4개월 내 이직 시 수수료 분쟁 사례)</span>
+              <span class="font-bold text-slate-800 text-right">한국경제 보도 기반</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-600">가정: 채용 1,000건 · 건당 평균 수수료 약 420만원 · 조기퇴사율 10.3%p 개선 시</span>
+              <span class="font-bold text-emerald-600">약 4.3억원 규모</span>
+            </div>
+            <div class="border-t border-blue-200 pt-2 text-[11px] text-slate-500 leading-relaxed">
+              ※ 조기퇴사율(16.8%→6.5%)과 건당 수수료는 검증된 원티드 내부 데이터가 아닌 가정치입니다. 실제 수치는 원티드 측 데이터 확인이 필요합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    const DIMENSION_CONFIG = {
+      autonomy: { label: "자율성/재량권", icon: "fa-compass" },
+      deep_work: { label: "몰입 집중시간", icon: "fa-brain" },
+      social_load: { label: "소통 부하", icon: "fa-comments" },
+      pace_predictability: { label: "루틴 예측성", icon: "fa-calendar-check" },
+      async_collaboration: { label: "비동기 협업", icon: "fa-file-lines" },
+      boundary_integrity: { label: "일-삶 경계 분리", icon: "fa-shield-halved" }
+    };
+
+    let currentVector = {
+      autonomy: 0.85,
+      deep_work: 0.90,
+      social_load: 0.30,
+      pace_predictability: 0.70,
+      async_collaboration: 0.85,
+      boundary_integrity: 0.75
+    };
+
+    let sampleJDs = [
+      {
+        id: "wanted-jd-01",
+        company: "페이플로 (가상 핀테크사)",
+        title: "Senior Backend Developer (Core)",
+        culture: "사전 어젠다 없는 미팅 지양, 슬랙 스레드 비동기 소통",
+        vector: { autonomy: 0.90, deep_work: 0.95, social_load: 0.25, pace_predictability: 0.65, async_collaboration: 0.90, boundary_integrity: 0.70 }
+      },
+      {
+        id: "wanted-jd-02",
+        company: "로컬허브 (가상 커머스사)",
+        title: "Community & CX Operations Specialist",
+        culture: "일일 스탠드업 및 실시간 허들 위주의 빠른 피드백",
+        vector: { autonomy: 0.45, deep_work: 0.30, social_load: 0.90, pace_predictability: 0.40, async_collaboration: 0.25, boundary_integrity: 0.45 }
+      },
+      {
+        id: "wanted-jd-03",
+        company: "홈스타일랩 (가상 라이프스타일 플랫폼)",
+        title: "Growth Product Manager (PO)",
+        culture: "크로스 펑셔널 스쿼드 리딩 및 스프린트 리뷰 중심",
+        vector: { autonomy: 0.85, deep_work: 0.50, social_load: 0.80, pace_predictability: 0.55, async_collaboration: 0.65, boundary_integrity: 0.60 }
+      }
+    ];
+
+    let radarChart = null;
+
+    function initChart() {
+      if (typeof Chart === 'undefined') {
+        console.warn('Chart.js 로드 실패 - 레이더 차트 없이 슬라이더/매칭만 동작합니다.');
+        const canvas = document.getElementById('radarChart');
+        if (canvas && canvas.parentElement) {
+          canvas.parentElement.innerHTML = '<p class="text-xs text-slate-400 text-center p-4">차트 라이브러리를 불러오지 못했습니다. 슬라이더와 매칭 결과는 정상 동작합니다.</p>';
+        }
+        return;
+      }
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: Object.values(DIMENSION_CONFIG).map(d => d.label),
+          datasets: [{
+            label: '내 라이프 핏 벡터',
+            data: Object.keys(DIMENSION_CONFIG).map(k => currentVector[k]),
+            backgroundColor: 'rgba(51, 102, 255, 0.2)',
+            borderColor: '#3366FF',
+            pointBackgroundColor: '#3366FF',
+            pointBorderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 1,
+              ticks: { display: false, stepSize: 0.2 },
+              pointLabels: { font: { size: 10, family: 'Pretendard' }, color: '#64748B' }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function renderSliders() {
+      const container = document.getElementById('sliderGroup');
+      container.innerHTML = '';
+      Object.keys(DIMENSION_CONFIG).forEach(dim => {
+        const val = currentVector[dim];
+        const cfg = DIMENSION_CONFIG[dim];
+        const div = document.createElement('div');
+        div.className = "flex flex-col gap-1";
+        div.innerHTML = `
+          <div class="flex justify-between text-xs font-semibold text-slate-700">
+            <span class="flex items-center gap-1.5"><i class="fa-solid ${cfg.icon} text-slate-400"></i> ${cfg.label}</span>
+            <span class="text-blue-600 font-mono" id="val_${dim}">${val.toFixed(2)}</span>
+          </div>
+          <input type="range" min="0" max="1" step="0.05" value="${val}" 
+            class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            oninput="updateSlider('${dim}', this.value)" />
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateSlider(dim, val) {
+      currentVector[dim] = parseFloat(val);
+      document.getElementById(`val_${dim}`).innerText = parseFloat(val).toFixed(2);
+      if (radarChart) {
+        radarChart.data.datasets[0].data = Object.keys(DIMENSION_CONFIG).map(k => currentVector[k]);
+        radarChart.update();
+      }
+    }
+
+    async function recalculateMatch() {
+      try {
+        const res = await fetch('http://localhost:8000/api/v3/match-jds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_vector: currentVector })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          renderJDList(data.matches);
+          return;
+        }
+      } catch (e) {
+        // Fallback 로컬 연산
+      }
+      calculateMatchesLocal();
+    }
+
+    function calculateMatchesLocal() {
+      const results = sampleJDs.map(jd => {
+        let diffSum = 0;
+        let details = {};
+        Object.keys(DIMENSION_CONFIG).forEach(dim => {
+          const u = currentVector[dim];
+          const j = jd.vector[dim];
+          const diff = Math.abs(u - j);
+          diffSum += diff;
+          details[dim] = {
+            sim: Math.round((1 - diff) * 100),
+            status: diff <= 0.20 ? 'Optimal' : (diff >= 0.45 ? 'Warning' : 'Moderate')
+          };
+        });
+
+        const baseScore = Math.max(0, (1 - (diffSum / 6))) * 100;
+        let penalty = 1.0;
+        let riskWarning = null;
+
+        if (currentVector.social_load > 0.75 && jd.vector.social_load > 0.80) {
+          penalty = 0.88;
+          riskWarning = "회의 과부하 상태에서 추가 소통 부하로 인한 번아웃 위험";
+        }
+
+        const finalScore = Math.round(baseScore * penalty);
+        // 실측 근속 데이터로 검증되지 않은 예시 공식 (illustrative, not predictive)
+        const illustrativeRetentionRate = Math.min(98, Math.max(42, Math.round(36 + (finalScore * 0.62))));
+
+        return { ...jd, finalScore, illustrativeRetentionRate, details, riskWarning };
+      });
+
+      results.sort((a, b) => b.finalScore - a.finalScore);
+      renderJDList(results);
+    }
+
+    function renderJDList(results) {
+      const container = document.getElementById('jdMatchList');
+      container.innerHTML = '';
+
+      results.forEach((item, idx) => {
+        const isTop = idx === 0;
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition ${isTop ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 bg-white'}`;
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-bold text-slate-500">${item.company}</span>
+                ${isTop ? '<span class="text-[10px] font-extrabold bg-blue-600 text-white px-2 py-0.5 rounded-full">Best Life Fit</span>' : ''}
+              </div>
+              <h3 class="text-sm font-bold text-slate-900">${item.title}</h3>
+              <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-seedling text-emerald-500"></i> ${item.culture}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-2xl font-extrabold ${item.finalScore >= 80 ? 'text-blue-600' : 'text-slate-700'}">${item.finalScore}</span>
+              <span class="text-xs text-slate-400 font-bold">/ 100</span>
+              <div class="text-[11px] font-semibold text-emerald-600 mt-0.5">참고 지표(예시) ${item.illustrativeRetentionRate}%</div>
+            </div>
+          </div>
+
+          ${item.riskWarning ? `
+            <div class="mt-2.5 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> ${item.riskWarning}
+            </div>
+          ` : ''}
+
+          <div class="mt-3 grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100">
+            ${Object.keys(DIMENSION_CONFIG).slice(0, 3).map(dim => {
+              const dt = item.details ? item.details[dim] : { sim: 80, status: 'Optimal' };
+              return `
+                <div class="text-center bg-slate-50 p-1.5 rounded-lg">
+                  <span class="text-[10px] text-slate-500 block">${DIMENSION_CONFIG[dim].label}</span>
+                  <span class="text-xs font-bold ${dt.status === 'Optimal' ? 'text-blue-600' : (dt.status === 'Warning' ? 'text-amber-600' : 'text-slate-700')}">${dt.sim}%</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function setSample(idx) {
+      const samples = [
+        "",
+        "주로 혼자 조용히 코딩하고 아키텍처를 설계할 때 업무 몰입도가 최고조에 달한다. 불필요한 미팅이 3개 이상 겹치는 날은 개발 생산성이 완전히 무너진다. 문서화가 잘 되어 있고 슬랙으로 비동기 논의가 가능한 환경이 가장 잘 맞는다.",
+        "오전 10시부터 오후 5시까지 종일 기획 싱크와 대면 회의가 이어져 너무 피곤했다. 사람들과 이야기하는 것은 즐겁지만 하루 종일 실시간으로 즉각 반응해야 하는 환경은 저녁 번아웃을 유발한다. 회복을 위해 주 2회 정도는 온전한 집중 시간이 필요하다.",
+        "예측 불가능하게 갑자기 떨어지는 긴급 업무보다는 분기 단위로 잘 정돈된 로드맵을 따라가는 것을 선호한다. 퇴근 후에는 업무 알림이 차단되는 문화여야 오래 지치지 않고 일할 수 있다."
+      ];
+      document.getElementById('logInput').value = samples[idx];
+    }
+
+    function loadCalendarSync() {
+      document.getElementById('logInput').value = 
+        "[Google Calendar Meta Sync]\n" +
+        "- 주간 총 미팅 시간: 18.5시간 (주요 회의: 전사 싱크 4건, 1:1 미팅 5건)\n" +
+        "- 비방해 몰입 블록(Focus Time): 주당 4.2시간 확보에 그침\n" +
+        "- 퇴근 후(19시 이후) 캘린더 일정 등록: 주 2회 감지\n" +
+        "-> AI 분석: 회의 부하(Social Load) 과다 및 연속 몰입 시간 심각하게 부족.";
+      runAnalyze();
+    }
+
+    function loadSlackSync() {
+      document.getElementById('logInput').value = 
+        "[Slack Activity Meta Sync]\n" +
+        "- 일평균 슬랙 메시지 수발신: 142건 (스레드 참여율 78%)\n" +
+        "- 21시 이후 멘션 및 DM 응답 빈도: 상위 15% (경계 침범 시그널)\n" +
+        "- 주 소통 채널: #dev-backend (비동기 문서 공유 중심)\n" +
+        "-> AI 분석: 비동기 협업 선호하나, 퇴근 후 알림으로 인한 경계 보호(Boundary) 필요.";
+      runAnalyze();
+    }
+
+    async function runAnalyze() {
+      const text = document.getElementById('logInput').value.trim();
+      if (!text) {
+        alert("라이프로그 내용을 입력해주세요.");
+        return;
+      }
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.classList.add('opacity-60', 'cursor-not-allowed');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Two-Stage 파이프라인 분석 중...';
+
+      const resetBtn = () => {
+        btn.disabled = false;
+        btn.classList.remove('opacity-60', 'cursor-not-allowed');
+        btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Two-Stage AI 분석 실행';
+      };
+
+      try {
+        const res = await fetch('http://localhost:8000/api/v3/analyze-pipeline', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text })
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          applyAnalysisResult(data.stage2_inference, data.engine || "unknown");
+          resetBtn();
+          return;
+        }
+        console.log(`백엔드가 ${res.status} 응답 -> 로컬 규칙 기반 폴백으로 전환`);
+      } catch (err) {
+        console.log("백엔드 미구동 -> 로컬 규칙 기반 폴백으로 전환 (AI 분석 아님)");
+      }
+
+      setTimeout(() => {
+        let mockResult = {
+          user_vector: { autonomy: 0.70, deep_work: 0.65, social_load: 0.50, pace_predictability: 0.60, async_collaboration: 0.70, boundary_integrity: 0.65 },
+          evidence: [{ id: 1, category: "일반 업무 루틴", text: "일상 활동 및 기본 협업 맥락 확인 (규칙 기반, 백엔드 미연결)", confidence: 0.50 }],
+          signals: [{ id: "sig-1", dimension: "autonomy", hypothesis: "자율적 업무 환경에서 안정적 지속성 유지 (규칙 기반 추정)", confidence: 0.50 }]
+        };
+
+        if (text.includes("[Google Calendar")) {
+          mockResult.user_vector = { autonomy: 0.40, deep_work: 0.25, social_load: 0.90, pace_predictability: 0.45, async_collaboration: 0.30, boundary_integrity: 0.35 };
+          mockResult.evidence = [{ id: 1, category: "회의 과부하", text: "주간 18.5시간 미팅 및 집중 블록 극심한 부족", confidence: 0.95 }];
+          mockResult.signals = [{ id: "sig-cal", dimension: "social_load", hypothesis: "회의 피로도로 인한 저녁 번아웃 위험 감지", confidence: 0.92 }];
+        } else if (text.includes("[Slack Activity")) {
+          mockResult.user_vector = { autonomy: 0.75, deep_work: 0.60, social_load: 0.70, pace_predictability: 0.50, async_collaboration: 0.85, boundary_integrity: 0.30 };
+          mockResult.evidence = [{ id: 1, category: "경계 붕괴 시그널", text: "21시 이후 상위 15% 빈도의 야간 메시지 대응", confidence: 0.93 }];
+          mockResult.signals = [{ id: "sig-slk", dimension: "boundary_integrity", hypothesis: "비동기 협업 역량은 우수하나 퇴근 후 경계 보호 절실", confidence: 0.90 }];
+        } else if (text.includes("코딩") || text.includes("혼자")) {
+          mockResult.user_vector = { autonomy: 0.90, deep_work: 0.95, social_load: 0.25, pace_predictability: 0.70, async_collaboration: 0.90, boundary_integrity: 0.75 };
+          mockResult.evidence = [{ id: 1, category: "몰입 집중", text: "비방해 연속 몰입 환경에서 최고 성과 발휘 (규칙 기반 추정)", confidence: 0.55 }];
+          mockResult.signals = [{ id: "sig-1", dimension: "deep_work", hypothesis: "문서 기반 비동기 개발 문화 최적합", confidence: 0.55 }];
+        } else if (text.includes("회의") || text.includes("미팅") || text.includes("피곤")) {
+          mockResult.user_vector = { autonomy: 0.45, deep_work: 0.30, social_load: 0.85, pace_predictability: 0.40, async_collaboration: 0.30, boundary_integrity: 0.35 };
+          mockResult.evidence = [{ id: 1, category: "소통 부하", text: "회의/소통 관련 키워드 감지 (규칙 기반 추정)", confidence: 0.55 }];
+          mockResult.signals = [{ id: "sig-2", dimension: "social_load", hypothesis: "실시간 소통 부하가 클 가능성", confidence: 0.55 }];
+        } else if (text.includes("로드맵") || text.includes("퇴근 후") || text.includes("예측 불가")) {
+          mockResult.user_vector = { autonomy: 0.65, deep_work: 0.55, social_load: 0.40, pace_predictability: 0.80, async_collaboration: 0.55, boundary_integrity: 0.80 };
+          mockResult.evidence = [{ id: 1, category: "루틴 안정성", text: "일정 예측성/경계 보호 관련 키워드 감지 (규칙 기반 추정)", confidence: 0.55 }];
+          mockResult.signals = [{ id: "sig-3", dimension: "pace_predictability", hypothesis: "예측 가능한 로드맵과 퇴근 후 경계 보호 선호", confidence: 0.55 }];
+        }
+
+        applyAnalysisResult(mockResult, "rule_based_fallback_offline");
+        resetBtn();
+      }, 350);
+    }
+
+    const ENGINE_LABELS = {
+      llm_gemini: { text: "Gemini LLM 분석 완료 (무료)", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+      llm_openai: { text: "OpenAI LLM 분석 완료 (유료)", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+      rule_based_fallback: { text: "규칙 기반 폴백 (LLM 미사용)", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+      rule_based_fallback_offline: { text: "규칙 기반 폴백 · 백엔드 미연결", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+      unknown: { text: "엔진 정보 없음", cls: "bg-slate-100 text-slate-600 border-slate-200" }
+    };
+
+    function applyAnalysisResult(data, engine) {
+      document.getElementById('signalSection').classList.remove('hidden');
+      document.getElementById('signalSection').classList.add('flex');
+
+      const engineBadge = document.getElementById('engineBadge');
+      if (engineBadge) {
+        const info = ENGINE_LABELS[engine] || ENGINE_LABELS.unknown;
+        engineBadge.textContent = info.text;
+        engineBadge.className = `text-[11px] font-medium px-2 py-0.5 rounded border ${info.cls}`;
+      }
+
+      const evList = document.getElementById('evidenceList');
+      evList.innerHTML = data.evidence.map(e => `
+        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 flex items-start justify-between">
+          <div>
+            <span class="font-bold text-slate-900 block mb-0.5">${e.category}</span>
+            <span class="text-slate-500">"${e.text}"</span>
+          </div>
+          <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">신뢰도 ${Math.round(e.confidence * 100)}%</span>
+        </div>
+      `).join('');
+
+      const sigList = document.getElementById('signalList');
+      sigList.innerHTML = data.signals.map(s => `
+        <div class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-200 text-xs">
+          <div class="flex justify-between items-center mb-0.5">
+            <span class="font-bold text-blue-900">가설: ${s.hypothesis}</span>
+            <span class="text-[10px] text-blue-600 font-bold">Conf ${Math.round(s.confidence * 100)}%</span>
+          </div>
+        </div>
+      `).join('');
+
+      currentVector = data.user_vector;
+      renderSliders();
+      if (radarChart) {
+        radarChart.data.datasets[0].data = Object.keys(DIMENSION_CONFIG).map(k => currentVector[k]);
+        radarChart.update();
+      }
+      recalculateMatch();
+    }
+
+    function openBenchmarkModal() {
+      document.getElementById('benchmarkModal').classList.remove('hidden');
+    }
+
+    function closeBenchmarkModal() {
+      document.getElementById('benchmarkModal').classList.add('hidden');
+    }
+
+    window.onload = () => {
+      initChart();
+      renderSliders();
+      calculateMatchesLocal();
+    };
+  </script>
+</body>
+</html>
