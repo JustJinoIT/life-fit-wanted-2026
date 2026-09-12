@@ -223,6 +223,62 @@ def rule_based_parse(text: str) -> Dict[str, Any]:
 
     return {"user_vector": vec, "evidence": evidences, "signals": signals}
 
+# ----------------- Stage 2 방어 코드: LLM 응답 검증 (malformed evidence/signals로 인한 프론트 NaN% 렌더링 방지) -----------------
+def _safe_float01(value: Any, default: float = 0.5) -> float:
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return default
+    if math.isnan(f) or math.isinf(f):
+        return default
+    return max(0.0, min(1.0, f))
+
+def sanitize_llm_result(parsed: Dict[str, Any]) -> Dict[str, Any]:
+    raw_vector = parsed.get("user_vector") if isinstance(parsed, dict) else None
+    user_vector = {
+        k: _safe_float01((raw_vector or {}).get(k), 0.5) for k in DIMENSION_KEYS
+    }
+
+    raw_evidence = parsed.get("evidence") if isinstance(parsed, dict) else None
+    evidence = []
+    if isinstance(raw_evidence, list):
+        for i, item in enumerate(raw_evidence):
+            if not isinstance(item, dict):
+                continue
+            text = item.get("text")
+            if not isinstance(text, str) or not text.strip():
+                continue
+            category = item.get("category")
+            evidence.append({
+                "id": item.get("id", i + 1),
+                "category": category if isinstance(category, str) and category.strip() else "general",
+                "text": text,
+                "confidence": _safe_float01(item.get("confidence"), 0.5),
+            })
+    if not evidence:
+        evidence.append({"id": 1, "category": "general", "text": "LLM 응답 형식 이상 - 중립값 반환", "confidence": 0.5})
+
+    raw_signals = parsed.get("signals") if isinstance(parsed, dict) else None
+    signals = []
+    if isinstance(raw_signals, list):
+        for i, item in enumerate(raw_signals):
+            if not isinstance(item, dict):
+                continue
+            hypothesis = item.get("hypothesis")
+            if not isinstance(hypothesis, str) or not hypothesis.strip():
+                continue
+            dimension = item.get("dimension")
+            signals.append({
+                "id": item.get("id", f"sig-{i + 1}"),
+                "dimension": dimension if isinstance(dimension, str) and dimension.strip() else "autonomy",
+                "hypothesis": hypothesis,
+                "confidence": _safe_float01(item.get("confidence"), 0.5),
+            })
+    if not signals:
+        signals.append({"id": "sig-0", "dimension": "autonomy", "hypothesis": "LLM 응답 형식 이상 - 슬라이더로 직접 조정 필요", "confidence": 0.5})
+
+    return {"user_vector": user_vector, "evidence": evidence, "signals": signals}
+
 _LLM_PROMPT_TEMPLATE = (
     "다음 라이프로그 텍스트를 읽고 아래 6개 축을 0.0~1.0으로 추정해줘: "
     + ", ".join(DIMENSION_KEYS)
@@ -305,12 +361,12 @@ def analyze(req: LogInput):
         gemini_result = gemini_parse(cleaned_text)
         if gemini_result is not None:
             engine = "llm_gemini"
-            parsed = gemini_result
+            parsed = sanitize_llm_result(gemini_result)
         else:
             openai_result = openai_parse(cleaned_text)
             if openai_result is not None:
                 engine = "llm_openai"
-                parsed = openai_result
+                parsed = sanitize_llm_result(openai_result)
             else:
                 engine = "rule_based_fallback"
                 parsed = rule_based_parse(cleaned_text)

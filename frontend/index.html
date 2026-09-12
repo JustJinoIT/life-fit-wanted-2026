@@ -555,23 +555,33 @@
         engineBadge.className = `text-[11px] font-medium px-2 py-0.5 rounded border ${info.cls}`;
       }
 
+      // LLM 응답이 형식을 안 지킬 때(숫자만 온 항목, confidence 누락 등) 화면이 깨지지 않도록 방어
+      const safePct = (v) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? `${Math.round(n * 100)}%` : '—';
+      };
+
       const evList = document.getElementById('evidenceList');
-      evList.innerHTML = data.evidence.map(e => `
+      evList.innerHTML = data.evidence
+        .filter(e => e && typeof e.text === 'string' && e.text.trim() !== '')
+        .map(e => `
         <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 flex items-start justify-between">
           <div>
             <span class="font-bold text-slate-900 block mb-0.5">${e.category}</span>
             <span class="text-slate-500">"${e.text}"</span>
           </div>
-          <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">신뢰도 ${Math.round(e.confidence * 100)}%</span>
+          <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">신뢰도 ${safePct(e.confidence)}</span>
         </div>
       `).join('');
 
       const sigList = document.getElementById('signalList');
-      sigList.innerHTML = data.signals.map(s => `
+      sigList.innerHTML = data.signals
+        .filter(s => s && typeof s.hypothesis === 'string' && s.hypothesis.trim() !== '')
+        .map(s => `
         <div class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-200 text-xs">
           <div class="flex justify-between items-center mb-0.5">
             <span class="font-bold text-blue-900">가설: ${s.hypothesis}</span>
-            <span class="text-[10px] text-blue-600 font-bold">Conf ${Math.round(s.confidence * 100)}%</span>
+            <span class="text-[10px] text-blue-600 font-bold">Conf ${safePct(s.confidence)}</span>
           </div>
         </div>
       `).join('');
