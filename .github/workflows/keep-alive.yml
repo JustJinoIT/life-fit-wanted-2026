@@ -13,5 +13,9 @@ jobs:
       - name: Ping health endpoint
         run: |
           curl -sS -o /dev/null -w "status=%{http_code} time=%{time_total}s\n" \
-            --max-time 25 --retry 2 --retry-delay 5 \
+            --max-time 30 --retry 3 --retry-delay 5 \
+            --retry-connrefused --retry-all-errors \
+            -L \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" \
+            -H "Accept: application/json" \
             https://life-fit-backend.onrender.com/api/v3/health
